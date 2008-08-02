@@ -25,6 +25,8 @@ import urllib
 
 # source path for launchers data
 BASE_CURRENT_SOURCE_PATH = xbmc.translatePath( os.path.join( "P:\\plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "launchers.xml" ) )
+SHORTCUT_FILE = xbmc.translatePath( os.path.join( "P:\\plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "shortcut.cut" ) )
+
 REMOVE_COMMAND = "%%REMOVE%%"
 ADD_COMMAND = "%%ADD%%"
 IMPORT_COMMAND = "%%IMPORT%%"
@@ -139,8 +141,10 @@ class Main:
                 xbmc.executebuiltin("System.Exec(\"%s %s\")" % (launcher["application"], launcher["args"]))
             elif (sys.platform == 'linux'):
                 os.system("\"%s %s\"" % (launcher["application"], launcher["args"]))
-            else:
+            elif (sys.platform == 'mac'):
                 xbmc.Dialog.ok("Launcher", "Operation System '%s' is not supported" % (sys.platform))
+            else:
+                xbmc.executebuiltin('XBMC.Runxbe(' + launcher["application"] + ')')                
 
     def _run_rom(self, launcherName, romName):
         if (self.launchers.has_key(launcherName)):
@@ -151,8 +155,19 @@ class Main:
                     xbmc.executebuiltin("System.Exec(\"%s %s %s\")" % (launcher["application"], launcher["args"], rom["filename"]))
                 elif (sys.platform == 'linux'):
                     os.system("\"%s %s %s\"" % (launcher["application"], launcher["args"], rom["filename"]))
-                else:
+                elif (sys.platform == 'mac'):
                     xbmc.Dialog.ok("Launcher", "Operation System '%s' is not supported" % (sys.platform))
+                else:
+                    # xbox
+                    f=open(SHORTCUT_FILE, "wb")
+                    f.write("<shortcut>\n")
+                    f.write("    <path>" + launcher["application"] + "</path>\n")
+                    f.write("    <custom>\n")
+                    f.write("       <game>" + rom["filename"] + "</game>\n")
+                    f.write("    </custom>\n")
+                    f.write("</shortcut>\n")
+                    f.close()
+                    xbmc.executebuiltin('XBMC.Runxbe(' + SHORTCUT_FILE + ')')                    
 
     ''' get an xml data from an xml file '''
     def get_xml_source( self ):
@@ -470,8 +485,12 @@ class Main:
         if (type == 0):
             if (sys.platform == "win32"):
                 filter = ".exe"
-            else:
+            elif (sys.platform == "linux"):
                 filter = ""
+            elif (sys.platform == "mac"):
+                filter = ""
+            else :
+                fliter = ".xbe|.cut"
             app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", filter)
             if (app):
                 argkeyboard = xbmc.Keyboard("", "Application arguments")
