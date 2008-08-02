@@ -40,9 +40,11 @@ class SearchEngine:
         for result in results:
             title = re.findall( "<Title>(.*?)</Title>", result )
             url = re.findall( "<Url>(.*?)</Url>", result )
+            thumb = re.findall( "<Thumbnail><Url>(.*?)</Url>", result )
             result_data = {}
             result_data["title"] = title[0]
             result_data["url"] = url[0]
+            result_data["thumb"] = thumb[0]
             result_of_query.append(result_data)
             
         return result_of_query

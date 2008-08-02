@@ -31,11 +31,14 @@ REMOVE_COMMAND = "%%REMOVE%%"
 ADD_COMMAND = "%%ADD%%"
 IMPORT_COMMAND = "%%IMPORT%%"
 SCAN_COMMAND = "%%SCAN%%"
+SET_THUMB_COMMAND = "%%SETTHUMB%%"
+COMMAND_ARGS_SEPARATOR = "^^"
 
 pDialog = xbmcgui.DialogProgress()
 pDialog.create( sys.modules[ "__main__" ].__plugin__ )
 
 class Main:
+    BASE_CACHE_PATH = os.path.join( "P:\\Thumbnails", "Pictures" )
     launchers = {}
 
     ''' initializes plugin and run the requiered action
@@ -70,8 +73,10 @@ class Main:
         param = sys.argv[ 2 ]
         if param:
             param = param[1:]
-            dirname = os.path.dirname(param)
-            basename = os.path.basename(param)
+            command = param.split(COMMAND_ARGS_SEPARATOR)
+            dirname = os.path.dirname(command[0])
+            basename = os.path.basename(command[0])
+            
             # check the action needed
             if (dirname):
                 launcher = dirname
@@ -90,6 +95,15 @@ class Main:
                         romname = os.path.basename(launcher)
                         launcher = os.path.dirname(launcher)
                         self._search_thumb(launcher, romname)
+                elif (rom == SET_THUMB_COMMAND):
+                    thumb = command[1]
+                    # check if it is a single rom or a launcher 
+                    if (not os.path.dirname(launcher)):
+                        self._set_thumb(launcher, "", thumb)
+                    else:
+                        romname = os.path.basename(launcher)
+                        launcher = os.path.dirname(launcher)
+                        self._set_thumb(launcher, romname, thumb)
                 elif (rom == ADD_COMMAND):
                     self._add_new_rom(launcher)
                 elif (rom == IMPORT_COMMAND):
@@ -116,8 +130,6 @@ class Main:
                 if (self._add_new_launcher()):
                     self._get_launchers()
                     
-        xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
-
     def _remove_rom(self, launcher, rom):        
         dialog = xbmcgui.Dialog()
         ret = dialog.yesno('Launcher', 'Are you sure you want to remove rom "%s" ?' % rom)
@@ -291,6 +303,7 @@ class Main:
             for index in self.launchers:
                 launcher = self.launchers[index]
                 self._add_launcher(launcher["name"], launcher["application"], launcher["rompath"], launcher["romext"], launcher["thumb"], launcher["roms"], len(self.launchers))
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
             return True   
         else:
             return False
@@ -309,11 +322,12 @@ class Main:
                 ret = dialog.yesno('Launcher', 'Import roms from path?')
                 if (ret):
                     self._import_roms(launcherName, addRoms = True)
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
             return True
         else:
             return False
 
-    def _search_thumb(self, launcherName, romname, save = True):
+    def _search_thumb(self, launcherName, romname):
         search_engine = self._get_search_engine()
         pDialog.update( 0, "Searching for \"%s %s\" in %s..." % (launcherName, romname, self.settings[ "search_engine" ]) )
         if (romname) :
@@ -324,34 +338,41 @@ class Main:
         if (len(results)>0):
             dialog = xbmcgui.Dialog()
             thumbs = []
+            total = len(results)
             for result in results:
-                thumbs.append("%s (%s)" % (result["title"],result["url"]))
+                thumbnail = self._get_thumbnail(result["thumb"])
+                listitem = xbmcgui.ListItem( "%s (%s)" % (result["title"], result["url"]), iconImage="DefaultProgram.png", thumbnailImage=thumbnail )
+                xbmcplugin.addDirectoryItem( handle=int( self._handle ), url="%s?%s/%s/%s%s%s"  % (self._path, launcherName, romname, SET_THUMB_COMMAND, COMMAND_ARGS_SEPARATOR, result["url"]), listitem=listitem, isFolder=False, totalItems=total)
 
-            ret = dialog.select('Choose a thumbnail', thumbs)
-            
-            firstResult = results[ret]
-            self.url = firstResult["url"]
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
 
-            # download thumb
-            urllib.urlretrieve( self.url, None, self._report_hook )
+    def _set_thumb(self, launcherName, romname, url):
+        self.url = url
+        # download thumb
+        urllib.urlretrieve( url, None, self._report_hook )
 
-            # copy it into thumbs path
-            path = self.settings[ "thumbs_path" ]
-            filepath = "%s/%s" % (path, os.path.basename(self.url))
-            pDialog.update( 100, "Saving..." )
-            xbmc.sleep( 50 )
-            xbmc.executehttpapi( "FileCopy(%s,%s)" % ( self.url, filepath, ) )
+        # copy it into thumbs path
+        path = self.settings[ "thumbs_path" ]
+        filepath = "%s/%s" % (path, os.path.basename(url))
+        pDialog.update( 100, "Saving..." )
+        xbmc.sleep( 50 )
+        xbmc.executehttpapi( "FileCopy(%s,%s)" % (url, filepath, ) )
 
-            launcher = self.launchers[launcherName]
+        launcher = self.launchers[launcherName]
 
-            if (romname):
-                rom = launcher["roms"][romname]
-                rom["thumb"] = filepath
-            else:
-                launcher["thumb"] = filepath
+        if (romname):
+            rom = launcher["roms"][romname]
+            rom["thumb"] = filepath
+        else:
+            launcher["thumb"] = filepath
                 
-            if (save):
-                self._save_launchers()
+        self._save_launchers()
+
+        # returning back to the previous window
+        if (romname):
+            xbmc.executebuiltin("ActivateWindow(Programs,%s?%s)" % (self._path, launcherName))
+        else:
+            xbmc.executebuiltin("ActivateWindow(Programs,%s)" % (self._path))
 
     def _report_hook( self, count, blocksize, totalsize ):
          percent = int( float( count * blocksize * 100) / totalsize )
@@ -359,8 +380,8 @@ class Main:
          pDialog.update( percent, msg1 )
          if ( pDialog.iscanceled() ): raise
         
-    def _scan_launcher(self, launchername, scanRoms = True):
-        self._search_thumb(launchername, "", False)
+    def _scan_launcher(self, launchername):
+        self._search_thumb(launchername, "")
         self._save_launchers()
 
     def _import_roms(self, launcherName, addRoms = False):
@@ -408,6 +429,24 @@ class Main:
         else:
             dialog.ok('Launcher', "%s roms has been imported successfully, %s roms skipped" % (romsCount, skipCount))
 
+    def _get_thumbnail( self, thumbnail_url ):
+        # make the proper cache filename and path so duplicate caching is unnecessary
+        if ( not thumbnail_url.startswith( "http://" ) ): return thumbnail_url
+        try:
+            filename = xbmc.getCacheThumbName( thumbnail_url )
+            filepath = xbmc.translatePath( os.path.join( self.BASE_CACHE_PATH, filename[ 0 ], filename ) )
+            # if the cached thumbnail does not exist fetch the thumbnail
+            if ( not os.path.isfile( filepath ) ):
+                # fetch thumbnail and save to filepath
+                info = urllib.urlretrieve( thumbnail_url, filepath )
+                # cleanup any remaining urllib cache
+                urllib.urlcleanup()
+            return filepath
+        except:
+            # return empty string if retrieval failed
+            print "ERROR: %s::%s (%d) - %s" % ( self.__class__.__name__, sys.exc_info()[ 2 ].tb_frame.f_code.co_name, sys.exc_info()[ 2 ].tb_lineno, sys.exc_info()[ 1 ], )
+            return ""
+        
     def _get_thumb(self, displayName, fileName):
         exts = ["jpg", "png", "gif","bmp"]
         for ext in exts:
@@ -422,11 +461,11 @@ class Main:
         if (path == ""):
             folder = False
             icon = "DefaultProgram.png"
-            commands = [ ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
+            commands = [ ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
         else:
             folder = True
             icon = "DefaultFolder.png"
-            commands = [ ("Import Roms from Path", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, IMPORT_COMMAND) , ), ( "Manually Add Rom", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, ADD_COMMAND) , ), ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
+            commands = [ ("Import Roms from Path", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, IMPORT_COMMAND) , ), ( "Manually Add Rom", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, ADD_COMMAND) , ), ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
 
         if (thumb):
             thumbnail = thumb
@@ -450,7 +489,7 @@ class Main:
             listitem = xbmcgui.ListItem( name, iconImage=icon, thumbnailImage=thumbnail)
         else:
             listitem = xbmcgui.ListItem( name, iconImage=icon )
-        listitem.addContextMenuItems( [ ( "Get Thumb", "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, REMOVE_COMMAND) , )] )
+        listitem.addContextMenuItems( [ ( "Get Thumb", "ActivateWindow(Programs,%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, REMOVE_COMMAND) , )] )
         xbmcplugin.addDirectoryItem( handle=int( self._handle ), url="%s?%s/%s"  % (self._path, launcher, name), listitem=listitem, isFolder=False, totalItems=total)
 
     def _add_new_rom ( self , launcherName) :
