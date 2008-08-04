@@ -523,7 +523,7 @@ class Main:
         type = dialog.select('Launcher Type', ['Standalone (normal PC executable)', 'File launcher (e.g. game emulator)'])
         if (type == 0):
             if (sys.platform == "win32"):
-                filter = ".exe"
+                filter = ".bat|.exe"
             elif (sys.platform == "linux"):
                 filter = ""
             elif (sys.platform == "mac"):
@@ -557,7 +557,7 @@ class Main:
                         xbmcgui.Dialog().ok("Launcher", "The Launcher Created Succesfully\n Rerun this plugin to see it.")
                         return True
         elif (type == 1):
-            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", ".exe")
+            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", filter)
             if (app):
                 argkeyboard = xbmc.Keyboard("", "Application arguments")
                 argkeyboard.doModal()
