@@ -32,6 +32,7 @@ ADD_COMMAND = "%%ADD%%"
 IMPORT_COMMAND = "%%IMPORT%%"
 SCAN_COMMAND = "%%SCAN%%"
 SET_THUMB_COMMAND = "%%SETTHUMB%%"
+WAIT_TOGGLE_COMMAND = "%%WAIT_TOGGLE%%"
 COMMAND_ARGS_SEPARATOR = "^^"
 
 pDialog = xbmcgui.DialogProgress()
@@ -56,6 +57,7 @@ class Main:
                 /launcher/%%IMPORT%% - import roms from rom path into launcher
                 /launcher/%%SCAN%% - scan for launcher & roms data from the internet
                 /launcher/rom/%%SCAN%% - scan for rom data from the internet
+                /launcher/%%WAIT_TOGGLE%% - toggle wait state 
                 /%%ADD%% - add a new launcher (open wizard)
                 
                 (blank)     - open a list of the available launchers. if no launcher exists - open the launcher creation wizard.
@@ -108,6 +110,8 @@ class Main:
                     self._add_new_rom(launcher)
                 elif (rom == IMPORT_COMMAND):
                     self._import_roms(launcher)
+                elif (rom == WAIT_TOGGLE_COMMAND):
+                    self._toggle_wait(launcher)
                 else:
                     self._run_rom(launcher, rom)
             else:
@@ -129,6 +133,8 @@ class Main:
                 # if no launcher found - attempt to add a new one
                 if (self._add_new_launcher()):
                     self._get_launchers()
+                else:
+                    xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=False )
                     
     def _remove_rom(self, launcher, rom):        
         dialog = xbmcgui.Dialog()
@@ -150,7 +156,11 @@ class Main:
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
             if (sys.platform == 'win32'):
-                xbmc.executebuiltin("System.Exec(\"%s %s\")" % (launcher["application"], launcher["args"]))
+                if (launcher["wait"] == "true"):
+                    cmd = "System.ExecWait"
+                else:
+                    cmd = "System.Exec"
+                xbmc.executebuiltin("%s(\"%s\" %s\")" % (cmd, launcher["application"], launcher["args"]))
             elif (sys.platform == 'linux'):
                 os.system("\"%s %s\"" % (launcher["application"], launcher["args"]))
             elif (sys.platform == 'mac'):
@@ -164,7 +174,11 @@ class Main:
             if (launcher["roms"].has_key(romName)):
                 rom = self.launchers[launcherName]["roms"][romName]
                 if (sys.platform == 'win32'):
-                    xbmc.executebuiltin("System.Exec(\"%s %s %s\")" % (launcher["application"], launcher["args"], rom["filename"]))
+                    if (launcher["wait"] == "true"):
+                        cmd = "System.ExecWait"
+                    else:
+                        cmd = "System.Exec"
+                    xbmc.executebuiltin("%s(\"%s\" %s \"%s\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
                 elif (sys.platform == 'linux'):
                     os.system("\"%s %s %s\"" % (launcher["application"], launcher["args"], rom["filename"]))
                 elif (sys.platform == 'mac'):
@@ -217,6 +231,7 @@ class Main:
             usock.write("\t\t<rompath>"+launcher["rompath"]+"</rompath>\n")
             usock.write("\t\t<romext>"+launcher["romext"]+"</romext>\n")
             usock.write("\t\t<thumb>"+launcher["thumb"]+"</thumb>\n")
+            usock.write("\t\t<wait>"+launcher["wait"]+"</wait>\n")
             usock.write("\t\t<roms>\n")
             for romIndex in launcher["roms"]:
                 romdata = launcher["roms"][romIndex]
@@ -241,6 +256,7 @@ class Main:
             rompath = re.findall( "<rompath>(.*?)</rompath>", launcher )
             romext = re.findall( "<romext>(.*?)</romext>", launcher )
             thumb = re.findall( "<thumb>(.*?)</thumb>", launcher )
+            wait = re.findall( "<wait>(.*?)</wait>", launcher )
             romsxml = re.findall( "<rom>(.*?)</rom>", launcher )
 
             if len(name) > 0 : name = name[0]
@@ -260,6 +276,9 @@ class Main:
 
             if len(thumb) > 0: thumb = thumb[0]
             else: thumb = ""
+
+            if len(wait) > 0: wait = wait[0]
+            else: wait = ""
             
             roms = {}
             for rom in romsxml:
@@ -293,6 +312,7 @@ class Main:
             launcherdata["rompath"] = rompath
             launcherdata["romext"] = romext
             launcherdata["thumb"] = thumb
+            launcherdata["wait"] = wait
             launcherdata["roms"] = roms
 
             # add launcher to the launchers list (using name as index)
@@ -302,7 +322,7 @@ class Main:
         if (len(self.launchers) > 0):
             for index in self.launchers:
                 launcher = self.launchers[index]
-                self._add_launcher(launcher["name"], launcher["application"], launcher["rompath"], launcher["romext"], launcher["thumb"], launcher["roms"], len(self.launchers))
+                self._add_launcher(launcher["name"], launcher["application"], launcher["rompath"], launcher["romext"], launcher["thumb"], launcher["wait"], launcher["roms"], len(self.launchers))
             xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
             return True   
         else:
@@ -457,16 +477,21 @@ class Main:
             if (os.path.isfile(thumbfilename)):
                 return thumbfilename            
         
-    def _add_launcher(self, name, cmd, path, ext, thumb, roms, total) :
+    def _add_launcher(self, name, cmd, path, ext, thumb, wait, roms, total) :
+        commands = []
+        commands.append(("Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ))
+        commands.append(("Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ))
+        commands.append(("Toggle Wait State", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, WAIT_TOGGLE_COMMAND) , ))
+        commands.append(("Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , ))
+        
         if (path == ""):
             folder = False
             icon = "DefaultProgram.png"
-            commands = [ ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
         else:
             folder = True
             icon = "DefaultFolder.png"
-            commands = [ ("Import Roms from Path", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, IMPORT_COMMAND) , ), ( "Manually Add Rom", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, ADD_COMMAND) , ), ( "Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ), ( "Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ), ( "Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , )]
-
+            commands.append(("Import Roms from Path", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, IMPORT_COMMAND) , ))
+            commands.append(("Manually Add Rom", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, ADD_COMMAND) , ))            
         if (thumb):
             thumbnail = thumb
         else:
@@ -521,15 +546,15 @@ class Main:
     def _add_new_launcher ( self ) :
         dialog = xbmcgui.Dialog()
         type = dialog.select('Launcher Type', ['Standalone (normal PC executable)', 'File launcher (e.g. game emulator)'])
+        if (sys.platform == "win32"):
+            filter = ".bat|.exe"
+        elif (sys.platform == "linux"):
+            filter = ""
+        elif (sys.platform == "mac"):
+            filter = ""
+        else:
+            filter = ".xbe|.cut"
         if (type == 0):
-            if (sys.platform == "win32"):
-                filter = ".bat|.exe"
-            elif (sys.platform == "linux"):
-                filter = ""
-            elif (sys.platform == "mac"):
-                filter = ""
-            else :
-                fliter = ".xbe|.cut"
             app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", filter)
             if (app):
                 argkeyboard = xbmc.Keyboard("", "Application arguments")
@@ -544,11 +569,12 @@ class Main:
                         # prepare launcher object data
                         launcherdata = {}
                         launcherdata["name"] = title
-                        launcherdata["application"] = '"' + app + '"'
+                        launcherdata["application"] = app
                         launcherdata["args"] = args 
                         launcherdata["rompath"] = ""
                         launcherdata["romext"] = ""
                         launcherdata["thumb"] = ""
+                        launcherdata["wait"] = "true"
                         launcherdata["roms"] = {}
                     
                         # add launcher to the launchers list (using name as index)
@@ -577,11 +603,12 @@ class Main:
                                 # prepare launcher object data
                                 launcherdata = {}
                                 launcherdata["name"] = title
-                                launcherdata["application"] = '"' + app + '"'
+                                launcherdata["application"] = app
                                 launcherdata["args"] = args 
                                 launcherdata["rompath"] = path
                                 launcherdata["romext"] = ext
                                 launcherdata["thumb"] = ""
+                                launcherdata["wait"] = "true"
                                 launcherdata["roms"] = {}
                         
                                 # add launcher to the launchers list (using name as index)
@@ -590,6 +617,18 @@ class Main:
                                 xbmcgui.Dialog().ok("Launcher", "The Launcher Created Successfully\n Rerun this plugin to see it.")
                                 return True
         return False
+
+    def _toggle_wait( self, launcher ):
+        # toggle wait state
+        if (self.launchers[launcher]["wait"] == "true"):
+            self.launchers[launcher]["wait"] = "false"
+            xbmcgui.Dialog().ok("Launcher", "Wait State has been changed. \nNow XBMC WON'T wait the application to be closed \nbefore returning to be active.")
+        else:
+            self.launchers[launcher]["wait"] = "true"
+            xbmcgui.Dialog().ok("Launcher", "Wait State has been changed. \nNow XBMC will wait the application to be closed \nbefore returning to be active.")
+        self._save_launchers()
+
+        
 
     def _get_search_engine( self ):
         exec "import resources.search_engines.%s.search_engine as search_engine" % ( self.settings[ "search_engine" ], )
