@@ -640,5 +640,8 @@ class Main:
 	self.settings[ "thumbs_path" ]     =  xbmcplugin.getSetting( "thumbs_path" )
 	self.settings[ "search_engine" ]   =  xbmcplugin.getSetting( "search_engine" )
 
+        if (sys.platform.startswith("linux")):
+            # fix for linux version
+            self.settings[ "thumbs_path" ] = self.settings[ "thumbs_path" ].replace("P:\\","~/.xbmc/")            
 	if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
 		os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
