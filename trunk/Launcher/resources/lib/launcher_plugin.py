@@ -161,8 +161,8 @@ class Main:
                 else:
                     cmd = "System.Exec"
                 xbmc.executebuiltin("%s(\"%s\" %s\")" % (cmd, launcher["application"], launcher["args"]))
-            elif (sys.platform == 'linux'):
-                os.system("\"%s %s\"" % (launcher["application"], launcher["args"]))
+            elif (sys.platform.startswith('linux')):
+                os.system("%s %s" % (launcher["application"], launcher["args"]))
             elif (sys.platform == 'mac'):
                 xbmc.Dialog.ok("Launcher", "Operation System '%s' is not supported" % (sys.platform))
             else:
@@ -179,8 +179,8 @@ class Main:
                     else:
                         cmd = "System.Exec"
                     xbmc.executebuiltin("%s(\"%s\" %s \"%s\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
-                elif (sys.platform == 'linux'):
-                    os.system("\"%s %s %s\"" % (launcher["application"], launcher["args"], rom["filename"]))
+                elif (sys.platform.startswith('linux')):
+                    os.system("%s %s %s" % (launcher["application"], launcher["args"], rom["filename"]))
                 elif (sys.platform == 'mac'):
                     xbmc.Dialog.ok("Launcher", "Operation System '%s' is not supported" % (sys.platform))
                 else:
@@ -481,7 +481,8 @@ class Main:
         commands = []
         commands.append(("Add New Launcher", "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ))
         commands.append(("Get Thumb", "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ))
-        commands.append(("Toggle Wait State", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, WAIT_TOGGLE_COMMAND) , ))
+        if (sys.platform == "win32"):
+            commands.append(("Toggle Wait State", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, WAIT_TOGGLE_COMMAND) , ))
         commands.append(("Remove", "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , ))
         
         if (path == ""):
@@ -534,7 +535,7 @@ class Main:
 
                 # prepare rom object data
                 romdata = {}
-                romdata["name"] = title
+                romdata["name"] = titleNone
                 romdata["filename"] = romfile
                 romdata["thumb"] = ""
 
@@ -548,14 +549,14 @@ class Main:
         type = dialog.select('Launcher Type', ['Standalone (normal PC executable)', 'File launcher (e.g. game emulator)'])
         if (sys.platform == "win32"):
             filter = ".bat|.exe"
-        elif (sys.platform == "linux"):
+        elif (sys.platform.startswith("linux")):
             filter = ""
         elif (sys.platform == "mac"):
             filter = ""
         else:
             filter = ".xbe|.cut"
         if (type == 0):
-            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", filter)
+            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files",filter)
             if (app):
                 argkeyboard = xbmc.Keyboard("", "Application arguments")
                 argkeyboard.doModal()
@@ -583,7 +584,7 @@ class Main:
                         xbmcgui.Dialog().ok("Launcher", "The Launcher Created Succesfully\n Rerun this plugin to see it.")
                         return True
         elif (type == 1):
-            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files", filter)
+            app = xbmcgui.Dialog().browse(1,"Select the launcher application","files",filter)
             if (app):
                 argkeyboard = xbmc.Keyboard("", "Application arguments")
                 argkeyboard.doModal()
@@ -636,12 +637,8 @@ class Main:
                                 
     def _get_settings( self ):
         self.settings = {}
-	try:        
-		self.settings[ "thumbs_path" ]     =  xbmcplugin.getSetting( "thumbs_path" )
-		self.settings[ "search_engine" ]   =  xbmcplugin.getSetting( "search_engine" )
+	self.settings[ "thumbs_path" ]     =  xbmcplugin.getSetting( "thumbs_path" )
+	self.settings[ "search_engine" ]   =  xbmcplugin.getSetting( "search_engine" )
 
-		if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
-                    os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
-        except:
-                traceback.print_exc(file=sys.stdout)
-                pass
+	if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
+		os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
