@@ -155,32 +155,28 @@ class Main:
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
-            if (sys.platform == 'win32'):
-                if (launcher["wait"] == "true"):
-                    cmd = "System.ExecWait"
-                else:
-                    cmd = "System.Exec"
-                xbmc.executebuiltin("%s(\"%s\" %s\")" % (cmd, launcher["application"], launcher["args"]))
-            elif (sys.platform.startswith('linux')):
-                os.system("%s %s" % (launcher["application"], launcher["args"]))
+            if (os.environ.get( "OS", "xbox" ) == "xbox"):
+                xbmc.executebuiltin('XBMC.Runxbe(' + launcher["application"] + ')')
             else:
-                xbmc.executebuiltin('XBMC.Runxbe(' + launcher["application"] + ')')                
+                if (sys.platform == 'win32'):
+                    if (launcher["wait"] == "true"):
+                        cmd = "System.ExecWait"
+                    else:
+                        cmd = "System.Exec"
+                    xbmc.executebuiltin("%s(\"%s\" %s\")" % (cmd, launcher["application"], launcher["args"]))
+                elif (sys.platform.startswith('linux')):
+                    os.system("%s %s" % (launcher["application"], launcher["args"]))
+                else:
+                    pass;
+                    # unsupported platform
+                             
 
     def _run_rom(self, launcherName, romName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
             if (launcher["roms"].has_key(romName)):
                 rom = self.launchers[launcherName]["roms"][romName]
-                if (sys.platform == 'win32'):
-                    if (launcher["wait"] == "true"):
-                        cmd = "System.ExecWait"
-                    else:
-                        cmd = "System.Exec"
-                    xbmc.executebuiltin("%s(\"%s\" %s \"%s\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
-                elif (sys.platform.startswith('linux')):
-                    os.system("%s %s %s" % (launcher["application"], launcher["args"], rom["filename"]))
-                else:
-                    # xbox
+                if (os.environ.get( "OS", "xbox" ) == "xbox"):
                     f=open(SHORTCUT_FILE, "wb")
                     f.write("<shortcut>\n")
                     f.write("    <path>" + launcher["application"] + "</path>\n")
@@ -190,6 +186,18 @@ class Main:
                     f.write("</shortcut>\n")
                     f.close()
                     xbmc.executebuiltin('XBMC.Runxbe(' + SHORTCUT_FILE + ')')                    
+                else:
+                    if (sys.platform == 'win32'):
+                        if (launcher["wait"] == "true"):
+                            cmd = "System.ExecWait"
+                        else:
+                            cmd = "System.Exec"
+                        xbmc.executebuiltin("%s(\"%s\" %s \"%s\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
+                    elif (sys.platform.startswith('linux')):
+                        os.system("%s %s %s" % (launcher["application"], launcher["args"], rom["filename"]))
+                    else:
+                        pass;
+                        # unsupported platform
 
     ''' get an xml data from an xml file '''
     def get_xml_source( self ):
@@ -369,7 +377,13 @@ class Main:
 
         # copy it into thumbs path
         path = self.settings[ "thumbs_path" ]
-        filepath = "%s/%s" % (path, os.path.basename(url))
+        if (sys.platform.startswith("linux")):
+            slash = "/"
+        else:
+            slash = "\\"
+        
+        filepath = "%s%s%s" % (path, slash, os.path.basename(url))
+        
         pDialog.update( 100, xbmc.getLocalizedString( 30032 ))
         xbmc.sleep( 50 )
         xbmc.executehttpapi( "FileCopy(%s,%s)" % (url, filepath, ) )
@@ -543,14 +557,14 @@ class Main:
     def _add_new_launcher ( self ) :
         dialog = xbmcgui.Dialog()
         type = dialog.select(xbmc.getLocalizedString( 30020 ), [xbmc.getLocalizedString( 30021 ), xbmc.getLocalizedString( 30022 )])
-        if (sys.platform == "win32"):
-            filter = ".bat|.exe"
-        elif (sys.platform.startswith("linux")):
-            filter = ""
-        elif (sys.platform == "mac"):
-            filter = ""
-        else:
+        if (os.environ.get( "OS", "xbox" ) == "xbox"):
             filter = ".xbe|.cut"
+        else:
+            if (sys.platform == "win32"):
+                filter = ".bat|.exe"
+            else:
+                filter = ""
+            
         if (type == 0):
             app = xbmcgui.Dialog().browse(1,xbmc.getLocalizedString( 30023 ),"files",filter)
             if (app):
@@ -638,6 +652,6 @@ class Main:
 
         if (sys.platform.startswith("linux")):
             # fix for linux version
-            self.settings[ "thumbs_path" ] = self.settings[ "thumbs_path" ].replace("P:\\","~/.xbmc/")            
+            self.settings[ "thumbs_path" ] = self.settings[ "thumbs_path" ].replace("Q:\\","~/.xbmc/")            
 	if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
 		os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
