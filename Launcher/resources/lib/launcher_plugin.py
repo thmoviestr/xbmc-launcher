@@ -142,7 +142,8 @@ class Main:
         if (ret):
             self.launchers[launcher]["roms"].pop(rom)
             self._save_launchers()
-            dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30011 ) + "\n" + xbmc.getLocalizedString( 30050 ))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30011 ) + " " + xbmc.getLocalizedString( 30050 )))
+            #dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30011 ) + "\n" + xbmc.getLocalizedString( 30050 ))
 
     def _remove_launcher(self, launcherName):
         dialog = xbmcgui.Dialog()
@@ -150,7 +151,8 @@ class Main:
         if (ret):
             self.launchers.pop(launcherName)
             self._save_launchers()
-            dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 )+ "\n" + xbmc.getLocalizedString( 30050 ))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 ) + " " + xbmc.getLocalizedString( 30050 )))
+            #dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 )+ "\n" + xbmc.getLocalizedString( 30050 ))
     
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
@@ -422,7 +424,7 @@ class Main:
         selectedLauncher = self.launchers[launcherName]
         pDialog = xbmcgui.DialogProgress()
         path = selectedLauncher["rompath"]
-        ext = selectedLauncher["romext"]
+        exts = selectedLauncher["romext"]
         roms = selectedLauncher["roms"]
         ret = pDialog.create(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30014 ) % (path));
         
@@ -430,34 +432,37 @@ class Main:
         for f in files:
             pDialog.update(filesCount * 100 / len(files))
             fullname = os.path.join(path, f)
-            print f
-            print "." + ext
-            if f.endswith("." + ext):
-                romname =  f[:-len(ext)-1].capitalize()
-                if (not roms.has_key(romname)):
-                    # prepare rom object data
-                    romdata = {}
+            for ext in exts.split("|"):
+                romadded = False
+                if f.endswith("." + ext):
                     romname =  f[:-len(ext)-1].capitalize()
-                    romdata["name"] = romname
-                    romdata["filename"] = '"' + fullname + '"'
-                    romdata["thumb"] = ""
+                    if (not roms.has_key(romname)):
+                        # prepare rom object data
+                        romdata = {}
+                        romname =  f[:-len(ext)-1].capitalize()
+                        romdata["name"] = romname
+                        romdata["filename"] = '"' + fullname + '"'
+                        romdata["thumb"] = ""
 
-                    # add rom to the roms list (using name as index)
-                    roms[romname] = romdata
-                    romsCount = romsCount + 1
-                    
-                    if (addRoms):
-                        self._add_rom(launcherName, romdata["name"], romdata["filename"], romdata["thumb"], len(files))
-                else:
+                        # add rom to the roms list (using name as index)
+                        roms[romname] = romdata
+                        romsCount = romsCount + 1
+                        
+                        if (addRoms):
+                            self._add_rom(launcherName, romdata["name"], romdata["filename"], romdata["thumb"], len(files))
+                            romadded = True
+                if not romadded:
                     skipCount = skipCount + 1
                 
             filesCount = filesCount + 1    
         pDialog.close()
         self._save_launchers()
         if (skipCount == 0):
-            dialog.ok(xbmc.getLocalizedString( 30000 ), (xbmc.getLocalizedString( 30015 )+ "\n" + xbmc.getLocalizedString( 30050 )) % (romsCount))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30015 ) % (romsCount) + " " + xbmc.getLocalizedString( 30050 )))
+            #dialog.ok(xbmc.getLocalizedString( 30000 ), (xbmc.getLocalizedString( 30015 )+ "\n" + xbmc.getLocalizedString( 30050 )) % (romsCount))
         else:
-            dialog.ok(xbmc.getLocalizedString( 30000 ), (xbmc.getLocalizedString( 30016 )+ "\n" + xbmc.getLocalizedString( 30050 )) % (romsCount, skipCount))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 12000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30016 ) % (romsCount, skipCount) + " " + xbmc.getLocalizedString( 30050 )))
+            #dialog.ok(xbmc.getLocalizedString( 30000 ), (xbmc.getLocalizedString( 30016 )+ "\n" + xbmc.getLocalizedString( 30050 )) % (romsCount, skipCount))
 
     def _get_thumbnail( self, thumbnail_url ):
         # make the proper cache filename and path so duplicate caching is unnecessary
@@ -545,13 +550,15 @@ class Main:
 
                 # prepare rom object data
                 romdata = {}
-                romdata["name"] = titleNone
+                romdata["name"] = title
                 romdata["filename"] = romfile
                 romdata["thumb"] = ""
 
                 # add rom to the roms list (using name as index)
                 roms[title] = romdata
-                xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30019 )+ "\n" + xbmc.getLocalizedString( 30050 ))
+                
+                xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30019 ) + " " + xbmc.getLocalizedString( 30050 )))
+                #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30019 )+ "\n" + xbmc.getLocalizedString( 30050 ))
         self._save_launchers()
 
     def _add_new_launcher ( self ) :
@@ -591,7 +598,8 @@ class Main:
                         # add launcher to the launchers list (using name as index)
                         self.launchers[title] = launcherdata
                         self._save_launchers()
-                        xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 )+ "\n" + xbmc.getLocalizedString( 30050 ))
+                        xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ) + " " + xbmc.getLocalizedString( 30050 )))
+                        #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 )+ "\n" + xbmc.getLocalizedString( 30050 ))
                         return True
         elif (type == 1):
             app = xbmcgui.Dialog().browse(1,xbmc.getLocalizedString( 30023 ),"files",filter)
@@ -625,7 +633,8 @@ class Main:
                                 # add launcher to the launchers list (using name as index)
                                 self.launchers[title] = launcherdata
                                 self._save_launchers()
-                                xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ))
+                                xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ) + " " + xbmc.getLocalizedString( 30050 )))
+                                #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ))
                                 return True
         return False
 
@@ -633,10 +642,12 @@ class Main:
         # toggle wait state
         if (self.launchers[launcher]["wait"] == "true"):
             self.launchers[launcher]["wait"] = "false"
-            xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30029 ))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30029 )  ))
+            #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30029 ))
         else:
             self.launchers[launcher]["wait"] = "true"
-            xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30030 ))
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30030 )  ))
+            #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30030 ))
         self._save_launchers()
 
         
