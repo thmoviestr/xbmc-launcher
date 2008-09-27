@@ -33,7 +33,7 @@
     <string id="30025">Set the title of the launcher</string>
     <string id="30026">The Launcher has been created succesfully</string>
     <string id="30027">Select the files path</string>
-    <string id="30028">Set the files extension (e.g zip)</string>
+    <string id="30028">Set the files extensions, use &quot;|&quot; as separtor. (e.g iso|bin)</string>
     <string id="30029">Application Waiting is now ACTIVE</string>
     <string id="30030">Application Waiting is now INACTIVE</string>
     <string id="30031">Searching for "%s %s" in %s...</string>
