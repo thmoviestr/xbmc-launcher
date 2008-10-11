@@ -157,6 +157,8 @@ class Main:
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
+	    pDialog.update( 0, xbmc.getLocalizedString( 30034 ) % launcherName)
+            xbmc.sleep( 50 )
             if (os.environ.get( "OS", "xbox" ) == "xbox"):
                 xbmc.executebuiltin('XBMC.Runxbe(' + launcher["application"] + ')')
             else:
@@ -178,6 +180,8 @@ class Main:
             launcher = self.launchers[launcherName]
             if (launcher["roms"].has_key(romName)):
                 rom = self.launchers[launcherName]["roms"][romName]
+		pDialog.update( 0, xbmc.getLocalizedString( 30034 ) % rom["name"])
+        	xbmc.sleep( 50 )
                 if (os.environ.get( "OS", "xbox" ) == "xbox"):
                     f=open(SHORTCUT_FILE, "wb")
                     f.write("<shortcut>\n")
