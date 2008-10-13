@@ -157,8 +157,6 @@ class Main:
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
-	    pDialog.update( 0, xbmc.getLocalizedString( 30034 ) % launcherName)
-            xbmc.sleep( 50 )
             if (os.environ.get( "OS", "xbox" ) == "xbox"):
                 xbmc.executebuiltin('XBMC.Runxbe(' + launcher["application"] + ')')
             else:
@@ -180,8 +178,6 @@ class Main:
             launcher = self.launchers[launcherName]
             if (launcher["roms"].has_key(romName)):
                 rom = self.launchers[launcherName]["roms"][romName]
-		pDialog.update( 0, xbmc.getLocalizedString( 30034 ) % rom["name"])
-        	xbmc.sleep( 50 )
                 if (os.environ.get( "OS", "xbox" ) == "xbox"):
                     f=open(SHORTCUT_FILE, "wb")
                     f.write("<shortcut>\n")
@@ -489,10 +485,10 @@ class Main:
     def _get_thumb(self, displayName, fileName):
         exts = ["jpg", "png", "gif","bmp"]
         for ext in exts:
-            thumbfilename = "%s/%s.%s" % (self.settings[ "thumbs_path" ], displayName, ext)
+            thumbfilename = os.path.join(self.settings[ "thumbs_path" ], "%s.%s" % (displayName, ext))
             if (os.path.isfile(thumbfilename)):
                 return thumbfilename
-            thumbfilename = "%s/%s.%s" % (self.settings[ "thumbs_path" ], os.path.basename(fileName).split(".")[0], ext)
+            thumbfilename = os.path.join(self.settings[ "thumbs_path" ], "%s.%s" % (os.path.basename(fileName).split(".")[0], ext))
             if (os.path.isfile(thumbfilename)):
                 return thumbfilename            
         
