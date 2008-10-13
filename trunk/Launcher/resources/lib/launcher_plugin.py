@@ -445,7 +445,7 @@ class Main:
                         romdata = {}
                         romname =  f[:-len(ext)-1].capitalize()
                         romdata["name"] = romname
-                        romdata["filename"] = '"' + fullname + '"'
+                        romdata["filename"] = fullname 
                         romdata["thumb"] = ""
 
                         # add rom to the roms list (using name as index)
