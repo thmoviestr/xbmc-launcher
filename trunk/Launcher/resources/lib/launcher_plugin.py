@@ -31,6 +31,7 @@ REMOVE_COMMAND = "%%REMOVE%%"
 ADD_COMMAND = "%%ADD%%"
 IMPORT_COMMAND = "%%IMPORT%%"
 SCAN_COMMAND = "%%SCAN%%"
+RENAME_COMMAND = "%%RENAME%%"
 SET_THUMB_COMMAND = "%%SETTHUMB%%"
 WAIT_TOGGLE_COMMAND = "%%WAIT_TOGGLE%%"
 COMMAND_ARGS_SEPARATOR = "^^"
@@ -89,6 +90,12 @@ class Main:
                         self._remove_launcher(launcher)
                     else:
                         self._remove_rom(os.path.dirname(launcher), os.path.basename(launcher))
+                if (rom == RENAME_COMMAND):
+                    # check if it is a single rom or a launcher
+                    if (not os.path.dirname(launcher)):
+                        self._rename_launcher(launcher)
+                    else:
+                        self._rename_rom(os.path.dirname(launcher), os.path.basename(launcher))
                 elif (rom == SCAN_COMMAND):
                     # check if it is a single rom scan or a launcher scan
                     if (not os.path.dirname(launcher)):
@@ -154,6 +161,22 @@ class Main:
             xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 ) + " " + xbmc.getLocalizedString( 30050 )))
             #dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 )+ "\n" + xbmc.getLocalizedString( 30050 ))
     
+    def _rename_rom(self, launcher, rom):        
+        keyboard = xbmc.Keyboard(self.launchers[launcher]["roms"][rom]["name"], xbmc.getLocalizedString( 30018 ))
+        keyboard.doModal()
+        if (keyboard.isConfirmed()):
+            self.launchers[launcher]["roms"][rom]["name"] = keyboard.getText()
+            self._save_launchers()
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30035 ) + " " + xbmc.getLocalizedString( 30050 )))
+        
+    def _rename_launcher(self, launcherName):
+        keyboard = xbmc.Keyboard(self.launchers[launcherName]["name"], xbmc.getLocalizedString( 30025 ))
+        keyboard.doModal()
+        if (keyboard.isConfirmed()):
+            self.launchers[launcherName]["name"] = keyboard.getText()
+            self._save_launchers()
+            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30035 ) + " " + xbmc.getLocalizedString( 30050 )))
+
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
@@ -361,6 +384,16 @@ class Main:
         else:
             search_string = "%s" % (launcherName)
         results = search_engine.search(search_string)
+        stopSearch = False
+        while (len(results)==0 and not stopSearch):
+            keyboard = xbmc.Keyboard(search_string, xbmc.getLocalizedString( 30034 ))
+            keyboard.doModal()
+            if (keyboard.isConfirmed()):
+                search_string = keyboard.getText()
+                results = search_engine.search(search_string)
+            else:
+                stopSearch = True
+                
         if (len(results)>0):
             dialog = xbmcgui.Dialog()
             thumbs = []
@@ -370,7 +403,7 @@ class Main:
                 listitem = xbmcgui.ListItem( "%s (%s)" % (result["title"], result["url"]), iconImage="DefaultProgram.png", thumbnailImage=thumbnail )
                 xbmcplugin.addDirectoryItem( handle=int( self._handle ), url="%s?%s/%s/%s%s%s"  % (self._path, launcherName, romname, SET_THUMB_COMMAND, COMMAND_ARGS_SEPARATOR, result["url"]), listitem=listitem, isFolder=False, totalItems=total)
 
-            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
+        xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
 
     def _set_thumb(self, launcherName, romname, url):
         self.url = url
@@ -434,7 +467,7 @@ class Main:
             fullname = os.path.join(path, f)
             for ext in exts.split("|"):
                 romadded = False
-                if f.endswith("." + ext):
+                if f.upper().endswith("." + ext.upper()):
                     romname =  f[:-len(ext)-1].capitalize()
                     if (not roms.has_key(romname)):
                         # prepare rom object data
@@ -498,6 +531,7 @@ class Main:
         commands.append((xbmc.getLocalizedString( 30102 ), "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ))
         if (sys.platform == "win32"):
             commands.append((xbmc.getLocalizedString( 30103 ), "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, WAIT_TOGGLE_COMMAND) , ))
+        commands.append((xbmc.getLocalizedString( 30107 ), "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, RENAME_COMMAND) , ))
         commands.append((xbmc.getLocalizedString( 30104 ), "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, REMOVE_COMMAND) , ))
         
         if (path == ""):
@@ -530,7 +564,11 @@ class Main:
             listitem = xbmcgui.ListItem( name, iconImage=icon, thumbnailImage=thumbnail)
         else:
             listitem = xbmcgui.ListItem( name, iconImage=icon )
-        listitem.addContextMenuItems( [ ( xbmc.getLocalizedString( 30102 ), "ActivateWindow(Programs,%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ), ( xbmc.getLocalizedString( 30104 ), "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, REMOVE_COMMAND) , )] )
+        commands = []
+        commands.append(( xbmc.getLocalizedString( 30102 ), "ActivateWindow(Programs,%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ))
+        commands.append(( xbmc.getLocalizedString( 30107 ), "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, RENAME_COMMAND) , ))
+        commands.append(( xbmc.getLocalizedString( 30104 ), "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, REMOVE_COMMAND) , ))
+        listitem.addContextMenuItems( commands )
         xbmcplugin.addDirectoryItem( handle=int( self._handle ), url="%s?%s/%s"  % (self._path, launcher, name), listitem=listitem, isFolder=False, totalItems=total)
 
     def _add_new_rom ( self , launcherName) :
