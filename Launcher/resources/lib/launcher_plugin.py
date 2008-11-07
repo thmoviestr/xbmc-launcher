@@ -66,6 +66,8 @@ class Main:
     def __init__( self ):
         # store an handle pointer
         self._handle = int(sys.argv[ 1 ])
+        print self._handle
+                    
         self._path = sys.argv[ 0 ]
         
         # get users preference
@@ -141,7 +143,7 @@ class Main:
                 if (self._add_new_launcher()):
                     self._get_launchers()
                 else:
-                    xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=False )
+                    xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=False , cacheToDisc=False)
                     
     def _remove_rom(self, launcher, rom):        
         dialog = xbmcgui.Dialog()
@@ -149,25 +151,23 @@ class Main:
         if (ret):
             self.launchers[launcher]["roms"].pop(rom)
             self._save_launchers()
-            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30011 ) + " " + xbmc.getLocalizedString( 30050 )))
-            #dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30011 ) + "\n" + xbmc.getLocalizedString( 30050 ))
-
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
+            
     def _remove_launcher(self, launcherName):
         dialog = xbmcgui.Dialog()
         ret = dialog.yesno(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30010 ) % launcherName)
         if (ret):
             self.launchers.pop(launcherName)
             self._save_launchers()
-            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 ) + " " + xbmc.getLocalizedString( 30050 )))
-            #dialog.ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30012 )+ "\n" + xbmc.getLocalizedString( 30050 ))
-    
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
+            
     def _rename_rom(self, launcher, rom):        
         keyboard = xbmc.Keyboard(self.launchers[launcher]["roms"][rom]["name"], xbmc.getLocalizedString( 30018 ))
         keyboard.doModal()
         if (keyboard.isConfirmed()):
             self.launchers[launcher]["roms"][rom]["name"] = keyboard.getText()
             self._save_launchers()
-            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30035 ) + " " + xbmc.getLocalizedString( 30050 )))
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
         
     def _rename_launcher(self, launcherName):
         keyboard = xbmc.Keyboard(self.launchers[launcherName]["name"], xbmc.getLocalizedString( 30025 ))
@@ -175,8 +175,8 @@ class Main:
         if (keyboard.isConfirmed()):
             self.launchers[launcherName]["name"] = keyboard.getText()
             self._save_launchers()
-            xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30035 ) + " " + xbmc.getLocalizedString( 30050 )))
-
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
+            
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
@@ -352,7 +352,7 @@ class Main:
             for index in self.launchers:
                 launcher = self.launchers[index]
                 self._add_launcher(launcher["name"], launcher["application"], launcher["rompath"], launcher["romext"], launcher["thumb"], launcher["wait"], launcher["roms"], len(self.launchers))
-            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
             return True   
         else:
             return False
@@ -371,7 +371,7 @@ class Main:
                 ret = dialog.yesno(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30013 ))
                 if (ret):
                     self._import_roms(launcherName, addRoms = True)
-            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
             return True
         else:
             return False
@@ -403,7 +403,7 @@ class Main:
                 listitem = xbmcgui.ListItem( "%s (%s)" % (result["title"], result["url"]), iconImage="DefaultProgram.png", thumbnailImage=thumbnail )
                 xbmcplugin.addDirectoryItem( handle=int( self._handle ), url="%s?%s/%s/%s%s%s"  % (self._path, launcherName, romname, SET_THUMB_COMMAND, COMMAND_ARGS_SEPARATOR, result["url"]), listitem=listitem, isFolder=False, totalItems=total)
 
-        xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True )
+        xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
 
     def _set_thumb(self, launcherName, romname, url):
         self.url = url
@@ -435,9 +435,9 @@ class Main:
 
         # returning back to the previous window
         if (romname):
-            xbmc.executebuiltin("ActivateWindow(Programs,%s?%s)" % (self._path, launcherName))
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcherName))
         else:
-            xbmc.executebuiltin("ActivateWindow(Programs,%s)" % (self._path))
+            xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
 
     def _report_hook( self, count, blocksize, totalsize ):
          percent = int( float( count * blocksize * 100) / totalsize )
@@ -528,7 +528,7 @@ class Main:
     def _add_launcher(self, name, cmd, path, ext, thumb, wait, roms, total) :
         commands = []
         commands.append((xbmc.getLocalizedString( 30101 ), "XBMC.RunPlugin(%s?%s)" % (self._path, ADD_COMMAND) , ))
-        commands.append((xbmc.getLocalizedString( 30102 ), "ActivateWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ))
+        commands.append((xbmc.getLocalizedString( 30102 ), "ReplaceWindow(Programs,%s?%s/%s)" % (self._path, name, SCAN_COMMAND) , ))
         if (sys.platform == "win32"):
             commands.append((xbmc.getLocalizedString( 30103 ), "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, WAIT_TOGGLE_COMMAND) , ))
         commands.append((xbmc.getLocalizedString( 30107 ), "XBMC.RunPlugin(%s?%s/%s)" % (self._path, name, RENAME_COMMAND) , ))
@@ -565,7 +565,7 @@ class Main:
         else:
             listitem = xbmcgui.ListItem( name, iconImage=icon )
         commands = []
-        commands.append(( xbmc.getLocalizedString( 30102 ), "ActivateWindow(Programs,%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ))
+        commands.append(( xbmc.getLocalizedString( 30102 ), "ReplaceWindow(Programs,%s?%s/%s/%s)" % (self._path, launcher, name, SCAN_COMMAND) , ))
         commands.append(( xbmc.getLocalizedString( 30107 ), "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, RENAME_COMMAND) , ))
         commands.append(( xbmc.getLocalizedString( 30104 ), "XBMC.RunPlugin(%s?%s/%s/%s)" % (self._path, launcher, name, REMOVE_COMMAND) , ))
         listitem.addContextMenuItems( commands )
@@ -594,7 +594,7 @@ class Main:
 
                 # add rom to the roms list (using name as index)
                 roms[title] = romdata
-                
+
                 xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30019 ) + " " + xbmc.getLocalizedString( 30050 )))
                 #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30019 )+ "\n" + xbmc.getLocalizedString( 30050 ))
         self._save_launchers()
@@ -636,8 +636,8 @@ class Main:
                         # add launcher to the launchers list (using name as index)
                         self.launchers[title] = launcherdata
                         self._save_launchers()
-                        xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ) + " " + xbmc.getLocalizedString( 30050 )))
-                        #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 )+ "\n" + xbmc.getLocalizedString( 30050 ))
+
+                        xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
                         return True
         elif (type == 1):
             app = xbmcgui.Dialog().browse(1,xbmc.getLocalizedString( 30023 ),"files",filter)
@@ -671,8 +671,7 @@ class Main:
                                 # add launcher to the launchers list (using name as index)
                                 self.launchers[title] = launcherdata
                                 self._save_launchers()
-                                xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ) + " " + xbmc.getLocalizedString( 30050 )))
-                                #xbmcgui.Dialog().ok(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30026 ))
+                                xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
                                 return True
         return False
 
