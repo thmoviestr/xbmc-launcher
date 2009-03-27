@@ -40,7 +40,7 @@ pDialog = xbmcgui.DialogProgress()
 pDialog.create( sys.modules[ "__main__" ].__plugin__ )
 
 class Main:
-    BASE_CACHE_PATH = os.path.join( "P:\\Thumbnails", "Pictures" )
+    BASE_CACHE_PATH = xbmc.translatePath(os.path.join( "P:\\Thumbnails", "Pictures" ))
     launchers = {}
 
     ''' initializes plugin and run the requiered action
@@ -412,12 +412,7 @@ class Main:
 
         # copy it into thumbs path
         path = self.settings[ "thumbs_path" ]
-        if (sys.platform.startswith("linux")):
-            slash = "/"
-        else:
-            slash = "\\"
-        
-        filepath = "%s%s%s" % (path, slash, os.path.basename(url))
+	filepath = os.path.join(path, os.path.basename(url))
         
         pDialog.update( 100, xbmc.getLocalizedString( 30032 ))
         xbmc.sleep( 50 )
@@ -695,11 +690,7 @@ class Main:
                                 
     def _get_settings( self ):
         self.settings = {}
-	self.settings[ "thumbs_path" ]     =  xbmcplugin.getSetting( "thumbs_path" )
-	self.settings[ "search_engine" ]   =  xbmcplugin.getSetting( "search_engine" )
-
-        if (sys.platform.startswith("linux")):
-            # fix for linux version
-            self.settings[ "thumbs_path" ] = self.settings[ "thumbs_path" ].replace("Q:\\","~/.xbmc/")            
+	self.settings[ "thumbs_path" ]     =  xbmc.translatePath(xbmcplugin.getSetting( "thumbs_path" ))
+	self.settings[ "search_engine" ]   =  xbmcplugin.getSetting( "search_engine" )      
 	if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
 		os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
