@@ -24,8 +24,8 @@ import re
 import urllib
 
 # source path for launchers data
-BASE_CURRENT_SOURCE_PATH = xbmc.translatePath( os.path.join( "P:\\plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "launchers.xml" ) )
-SHORTCUT_FILE = xbmc.translatePath( os.path.join( "P:\\plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "shortcut.cut" ) )
+BASE_CURRENT_SOURCE_PATH = xbmc.translatePath( os.path.join( "special://profile/plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "launchers.xml" ) )
+SHORTCUT_FILE = xbmc.translatePath( os.path.join( "special://profile/plugin_data", "programs", sys.modules[ "__main__" ].__plugin__, "shortcut.cut" ) )
 
 REMOVE_COMMAND = "%%REMOVE%%"
 ADD_COMMAND = "%%ADD%%"
@@ -40,7 +40,7 @@ pDialog = xbmcgui.DialogProgress()
 pDialog.create( sys.modules[ "__main__" ].__plugin__ )
 
 class Main:
-    BASE_CACHE_PATH = xbmc.translatePath(os.path.join( "P:\\Thumbnails", "Pictures" ))
+    BASE_CACHE_PATH = xbmc.translatePath(os.path.join( "special://profile/Thumbnails", "Pictures" ))
     launchers = {}
 
     ''' initializes plugin and run the requiered action
