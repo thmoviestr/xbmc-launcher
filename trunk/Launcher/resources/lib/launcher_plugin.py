@@ -188,9 +188,11 @@ class Main:
                         cmd = "System.ExecWait"
                     else:
                         cmd = "System.Exec"
-                    xbmc.executebuiltin("%s(\"%s\" %s\")" % (cmd, launcher["application"], launcher["args"]))
+                    xbmc.executebuiltin("%s(\"%s\" \"%s\")" % (cmd, launcher["application"], launcher["args"]))
                 elif (sys.platform.startswith('linux')):
                     os.system("%s %s" % (launcher["application"], launcher["args"]))
+                elif (sys.platform.startswith('darwin')):
+                    os.system("\"%s\" %s" % (launcher["application"], launcher["args"]))
                 else:
                     pass;
                     # unsupported platform
@@ -220,6 +222,8 @@ class Main:
                         xbmc.executebuiltin("%s(\"%s\" %s \"%s\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
                     elif (sys.platform.startswith('linux')):
                         os.system("%s %s %s" % (launcher["application"], launcher["args"], rom["filename"]))
+                    elif (sys.platform.startswith('darwin')):
+                        os.system("\"%s\" %s \"%s\"" % (launcher["application"], launcher["args"], rom["filename"]))
                     else:
                         pass;
                         # unsupported platform
