@@ -357,10 +357,9 @@ class Main:
     
     def _get_launchers( self ):
         if (len(self.launchers) > 0):
-            for index in self.launchers:
-                launcher = self.launchers[index]
-                self._add_launcher(launcher["name"], launcher["application"], launcher["rompath"], launcher["romext"], launcher["thumb"], launcher["wait"], launcher["roms"], len(self.launchers))
-            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
+            for key in sorted(self.launchers.iterkeys()):
+                self._add_launcher(self.launchers[key]["name"], self.launchers[key]["application"], self.launchers[key]["rompath"], self.launchers[key]["romext"], self.launchers[key]["thumb"], self.launchers[key]["wait"], self.launchers[key]["roms"], len(self.launchers))
+            xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False ) xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
             return True   
         else:
             return False
@@ -371,9 +370,8 @@ class Main:
             roms = selectedLauncher["roms"]
             print "Launcher: %s : found %d roms " % (launcherName, len(roms))
             if (len(roms) > 0) :
-                for index in roms :
-                    rom = roms[index]
-                    self._add_rom(launcherName, rom["name"], rom["filename"], rom["thumb"], len(roms))
+                for key in sorted(roms.iterkeys()):
+                    self._add_rom(launcherName, roms[key]["name"], roms[key]["filename"], roms[key]["thumb"], len(roms)) 
             else:
                 dialog = xbmcgui.Dialog()
                 ret = dialog.yesno(xbmc.getLocalizedString( 30000 ), xbmc.getLocalizedString( 30013 ))
