@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+    <string id="30000">Lanceur</string>
+
+    <!-- context menu -->
+    <string id="30101">Ajouter lanceur</string>
+    <string id="30102">Ajouter vignette</string>
+    <string id="30103">Basculer l'etat d'attente</string>
+    <string id="30104">Enlever</string>
+    <string id="30105">Importer des fichiers depuis un chemin</string>
+    <string id="30106">Ajouter un fichier manuellement</string>
+    <string id="30107">Renommer</string>
+
+
+    <!-- settings labels -->
+    <string id="30001">Chemin des vignettes</string>
+    <string id="30002">Moteur de recherche</string>
+
+    <!-- dialog messages -->
+    <string id="30010">Etes vous sur de vouloir enlever "%s" ?</string>
+    <string id="30011">Le fichier a été enlevé</string>
+    <string id="30012">Le lanceur a été enlevé</string>
+    <string id="30013">Importer des fichiers ?</string>
+    <string id="30014">Importation de fichiers depuis %s...</string>
+    <string id="30015">%s fichiers ont été importés</string>
+    <string id="30016">%s fichiers ont été importés, %s sautés</string>
+    <string id="30017">Selectionner le fichier</string>
+    <string id="30018">Set the title of the file</string>
+    <string id="30019">Le fichier a été ajouté correctement</string>
+    <string id="30020">Type de lanceur</string>
+    <string id="30021">Autonome (executable normal PC)</string>
+    <string id="30022">Lancement d'un fichier (ex: emulateur de jeux)</string>
+    <string id="30023">Selectionner l'application du lanceur</string>
+    <string id="30024">Arguments de l'application</string>
+    <string id="30025">Definir le titre du lanceur</string>
+    <string id="30026">Le lanceur a été créé</string>
+    <string id="30027">Selectionner le chemin des fichiers</string>
+    <string id="30028">Definir les extensions de fichier, utiliser &quot;|&quot; comme séparateur (ex: iso|bin)</string>
+    <string id="30029">Attente de l'application maintenant ACTIVE</string>
+    <string id="30030">Attente de l'application maintenant INACTIVE</string>
+    <string id="30031">Recherche de "%s %s" dans %s...</string>
+    <string id="30032">Sauvegarde...</string>
+    <string id="30033">Téléchargement de : %s</string>
+    <string id="30050">Re-entrez dans ce repertoire pour voir les changements</string>
+    <string id="30034">Pas de vignette trouvée. Entrer un nouveau nom a chercher</string>    
+    <string id="30035">Le fichier a bien été renommé</string>
+
+</strings>
