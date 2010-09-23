@@ -1,0 +1,8 @@
+﻿---
+2010-09-00 - Version 1.6.0
+   Thanks to CinPoU for releasing a working version :)
+   which I used to get my modified version running with new XBMC again.
+   
+   And Zerqent found out how to fix the lockup after adding a new launcher.
+   
+---

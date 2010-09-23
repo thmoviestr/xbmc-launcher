@@ -10,7 +10,8 @@
     <string id="30105">Import Files from Path</string>
     <string id="30106">Manually Add File</string>
     <string id="30107">Rename</string>
-
+    <string id="30511">Search</string>
+    <string id="30512">Search (all)</string>
 
     <!-- settings labels -->
     <string id="30001">Thumbnails Path</string>
@@ -44,5 +45,7 @@
     <string id="30050">Re-Enter this directory to see the changes</string>
     <string id="30034">No thumbnails found. Please enter another name to search</string>    
     <string id="30035">File has been renamed</string>
+    <string id="30501">Check for dead entries in %s...</string>
+    <string id="30502">%s entries removed successfully</string>
 
 </strings>
