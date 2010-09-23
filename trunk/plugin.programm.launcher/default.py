@@ -8,11 +8,11 @@ import os
 
 # plugin constants
 __plugin__ = "Launcher"
-__author__ = "leo212"
+__author__ = "JustSomeUser,CinPoU,leo212"
 __url__ = ""
 __svn_url__ = ""
 __credits__ = "Lior Tamam"
-__version__ = "0.1"
+__version__ = "1.6.0"
 
 
 if ( __name__ == "__main__" ):
