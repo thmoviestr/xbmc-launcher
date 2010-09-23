@@ -30,9 +30,9 @@ try:
     from xbmcaddon import Addon
 
     # source path for launchers data
-    PLUGIN_DATA_PATH = xbmc.translatePath( os.path.join( "special://profile/addon_data", "plugin.programm.launcher") )
+    PLUGIN_DATA_PATH = xbmc.translatePath( os.path.join( "special://profile/addon_data", "plugin.program.launcher") )
 
-    __settings__ = Addon( id="plugin.programm.launcher" )
+    __settings__ = Addon( id="plugin.program.launcher" )
     __language__ = __settings__.getLocalizedString
     print "Mode AddOn ON"
     print PLUGIN_DATA_PATH
