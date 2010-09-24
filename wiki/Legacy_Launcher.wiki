@@ -8,13 +8,10 @@ Latest Version Download:
 _http://xbmc-launcher.googlecode.com/files/Launcher1.04.zip_
 
 == Plugin Features == 
-- Run an application with arguments.
-
-- Run a file from directory using given application.
-
-- Search & Download images for applications and files using Yahoo search engine.
-
-- Full work with the GUI with. (add application, remove, add files, etc..)
+  * Run an application with arguments.
+  * Run a file from directory using given application.
+  * Search & Download images for applications and files using Yahoo search engine.
+  * Full work with the GUI with. (add application, remove, add files, etc..)
 
 
 == Installation == 
@@ -73,10 +70,9 @@ f. Select Launcher and Click "OK"
 3. Need to exit & re-enter directory to see changes (like adding & removing files)
 
 
-I'll be happy to get feedback about it, you may also open bugs in :
+We'll be happy to get feedback about it, you may also open bugs in :
 
 _http://code.google.com/p/xbmc-launcher/issues/list_
 
 Enjoy.
-
-leo
+XBMC-Launcher Team
