@@ -1,0 +1,24 @@
+#Launcher for XBMC 
+
+For information about using Launcher for XBMC 9.04 "Babalyon" (current stable release) please see _http://code.google.com/p/xbmc-launcher/wiki/Legacy_Launcher_
+
+= Introduction =
+XBMC-Launcher is a plugin that used to launch and run windows or linux applications including emulators within the XBMC GUI. 
+
+= Installation =
+Launcher is in the XBMC official Add-ons repository. To install Go to System --> Add-ons --> Get Add-ons --> All Add-ons (or XBMC.org Add-ons) --> Program Add-ons --> Launcher then chose install.
+
+= Plugin Features =
+
+  * Run an application with arguments.
+  * Run a file from directory using given application.
+  * Full work with the GUI with. (add application, remove, add files, etc..) 
+
+
+= Planned Features =
+  * Search & Download images for applications and files using a search engine.
+
+
+= Known Issues =
+  * Add-on may hang when importing files from path.(requires XBMC restart)
+  * If using XBMC-Live you may need to install and launch a [http://code.google.com/p/xbmc-launcher/wiki/Linux_Emulators Windows Manager].
