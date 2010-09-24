@@ -2,6 +2,8 @@
 == Introduction ==
 XBMC-Launcher is a plugin that used to launch and run windows or linux applications within the XBMC GUI.
 
+Development for the legacy version of the launcher plugin has been stopped to work on the addon for the soon to be released XBMC Dharma 10.X.
+
 Latest Version Download:
 _http://xbmc-launcher.googlecode.com/files/Launcher1.04.zip_
 
