@@ -1,0 +1,80 @@
+#summary General Info about the XBMC Launcher Plugin For XBMC 9.04 Babylon
+== Introduction ==
+XBMC-Launcher is a plugin that used to launch and run windows or linux applications within the XBMC GUI.
+
+Latest Version Download:
+_http://xbmc-launcher.googlecode.com/files/Launcher1.04.zip_
+
+== Plugin Features == 
+- Run an application with arguments.
+
+- Run a file from directory using given application.
+
+- Search & Download images for applications and files using Yahoo search engine.
+
+- Full work with the GUI with. (add application, remove, add files, etc..)
+
+
+== Installation == 
+
+1. unzip the file into Plugins/Program directory. (in linux is under your ~/.xbmc/)
+
+2. (linux users only): create a symlink for /usr/lib/libcurl.so.4 named 
+
+/usr/lib/libcurl.so (run: "sudo ln -sf /usr/lib/libcurl.so.4 /usr/lib/libcurl.so" in terminal)
+
+3. Run XBMC
+
+
+*If you are using PM3 Skin:*
+
+a. Switch to MC360 Skin (or some other skin that has "Programs" Section)
+
+b. Go to Games -> Applications -> Add Source -> Browse -> Program Plugins
+
+c. Select Launcher and Click "OK"
+
+d. Click OK Again.
+
+e. Right Click on "Launcher" Icon
+
+f. Choose "Add to Favorites"
+
+g. Switch back to PMIII Skin.
+
+h. Click on the Arrow in the bottom right corner
+
+i. Choose "Launcher"
+
+
+*If you are using PM3.HD Skin:*
+
+a. update your skin to the latest from svn of xbmc.
+
+b. go to skin settings
+
+c. choose "Show Programs in Main Menu"
+
+d. go back to the main menu and choose "Programs"
+
+e. Click Add Source -> Browse -> Program Plugins
+
+f. Select Launcher and Click "OK" 
+
+
+== Known Bugs == 
+
+1. Got stuck if no images were found on Yahoo service.
+
+2. (Windows Only) Minimizing and not maximizing back the XBMC after program finished.
+
+3. Need to exit & re-enter directory to see changes (like adding & removing files)
+
+
+I'll be happy to get feedback about it, you may also open bugs in :
+
+_http://code.google.com/p/xbmc-launcher/issues/list_
+
+Enjoy.
+
+leo
