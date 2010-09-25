@@ -1,4 +1,4 @@
-#Set up emulators on Linux for use with Launcher In XBMC-Live.
+#summary Set up emulators on Linux for use with Launcher In XBMC-Live.
 
 = Introduction =
 
