@@ -1,4 +1,8 @@
 ﻿---
+2010-09-25
+   Korean translation added thanks to neurostar
+   BUG FIX: now drops out of fullScreen when launching roms in linux
+
 2010-09-23 - Version 1.10.1
    Initial code sync between forum-mods & google project by Zerqent
    Version number changed to match launcherVER.xbmc-dharmaVER.launcherREV
