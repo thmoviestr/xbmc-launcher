@@ -570,7 +570,7 @@ class Main:
                     skipCount = skipCount + 1
                 
             filesCount = filesCount + 1    
-        pDialog.close()
+        #pDialog.close()
         self._save_launchers()
         if (skipCount == 0):
             xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (__language__( 30000 ), __language__( 30015 ) % (romsCount) + " " + __language__( 30050 )))
