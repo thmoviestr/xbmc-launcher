@@ -40,7 +40,7 @@ try:
     print PLUGIN_DATA_PATH
 
 
-except : 
+except :
     # source path for launchers data
     PLUGIN_DATA_PATH = xbmc.translatePath( os.path.join( "special://profile/plugin_data", "programs", sys.modules[ "__main__" ].__plugin__) )
 
@@ -176,7 +176,7 @@ class Main:
                 if (launcher == SEARCH_ALL_COMMAND):#search all
                     # check if we need to get user input or search the rom list
                     self._find_all_roms()
-                
+
                 # if it's an add command
                 elif (launcher == ADD_COMMAND):
                     self._add_new_launcher()
@@ -187,7 +187,7 @@ class Main:
                         self._run_launcher(launcher)
                     else:
                         # otherwise, list the roms
-                        self._get_roms(launcher)                    
+                        self._get_roms(launcher) 
         else:
             # otherwise get the list of the programs in the current folder
             if (not self._get_launchers()):
@@ -196,15 +196,15 @@ class Main:
                     self._get_launchers()
                 else:
                     xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=False , cacheToDisc=False)
-                    
-    def _remove_rom(self, launcher, rom):        
+
+    def _remove_rom(self, launcher, rom):
         dialog = xbmcgui.Dialog()
         ret = dialog.yesno(__language__( 30000 ), __language__( 30010 ) % rom)
         if (ret):
             self.launchers[launcher]["roms"].pop(rom)
-            self.storage_backend.save_launchers(launchers)
+            self.storage_backend.save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
-            
+
     def _remove_launcher(self, launcherName):
         dialog = xbmcgui.Dialog()
         ret = dialog.yesno(__language__( 30000 ), __language__( 30010 ) % launcherName)
@@ -212,15 +212,15 @@ class Main:
             self.launchers.pop(launcherName)
             self.storage_backend.save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
-            
-    def _rename_rom(self, launcher, rom):        
+
+    def _rename_rom(self, launcher, rom):
         keyboard = xbmc.Keyboard(self.launchers[launcher]["roms"][rom]["name"], __language__( 30018 ))
         keyboard.doModal()
         if (keyboard.isConfirmed()):
             self.launchers[launcher]["roms"][rom]["name"] = keyboard.getText()
             self.storage_backend.save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
-        
+
     def _rename_launcher(self, launcherName):
         keyboard = xbmc.Keyboard(self.launchers[launcherName]["name"], __language__( 30025 ))
         keyboard.doModal()
@@ -228,7 +228,7 @@ class Main:
             self.launchers[launcherName]["name"] = keyboard.getText()
             self.storage_backend._save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
-            
+
     def _run_launcher(self, launcherName):
         if (self.launchers.has_key(launcherName)):
             launcher = self.launchers[launcherName]
@@ -260,7 +260,6 @@ class Main:
                 else:
                     pass;
                     # unsupported platform
-                             
 
     def _run_rom(self, launcherName, romName):
         if (self.launchers.has_key(launcherName)):
@@ -276,7 +275,7 @@ class Main:
                     f.write("    </custom>\n")
                     f.write("</shortcut>\n")
                     f.close()
-                    xbmc.executebuiltin('XBMC.Runxbe(' + SHORTCUT_FILE + ')')                    
+                    xbmc.executebuiltin('XBMC.Runxbe(' + SHORTCUT_FILE + ')')
                 else:
                     if (sys.platform == 'win32'):
                         if (launcher["wait"] == "true"):
@@ -286,7 +285,7 @@ class Main:
                         xbmc.executebuiltin("%s(\\\"%s\\\" %s \\\"%s\\\")" % (cmd, launcher["application"], launcher["args"], rom["filename"]))
                     elif (sys.platform.startswith('linux')):
                         #this minimizes xbmc some apps seems to need it
-                        xbmc.executehttpapi("Action(199)")		      
+                        xbmc.executehttpapi("Action(199)")
                         os.system("\"%s\" %s \"%s\"" % (launcher["application"], launcher["args"], rom["filename"]))
                         #this brings xbmc back
                         xbmc.executehttpapi("Action(199)")
@@ -418,13 +417,13 @@ class Main:
 #
 #            # add launcher to the launchers list (using name as index)
 #            self.launchers[name] = launcherdata
-    
+
     def _get_launchers( self ):
         if self.launchers:
             for key in sorted(self.launchers.iterkeys()):
                 self._add_launcher(self.launchers[key]["name"], self.launchers[key]["application"], self.launchers[key]["rompath"], self.launchers[key]["romext"], self.launchers[key]["thumb"], self.launchers[key]["wait"], self.launchers[key]["roms"], len(self.launchers))
             xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
-            return True   
+            return True
         else:
             return False
 
@@ -463,7 +462,7 @@ class Main:
                 results = search_engine.search(search_string)
             else:
                 stopSearch = True
-                
+
         if (len(results)>0):
             dialog = xbmcgui.Dialog()
             thumbs = []
@@ -483,7 +482,7 @@ class Main:
         # copy it into thumbs path
         path = self.settings[ "thumbs_path" ]
         filepath = os.path.join(path, os.path.basename(url))
-        
+
         pDialog.update( 100, __language__( 30032 ))
         xbmc.sleep( 50 )
         xbmc.executehttpapi( "FileCopy(%s,%s)" % (url, filepath, ) )
@@ -495,7 +494,7 @@ class Main:
             rom["thumb"] = filepath
         else:
             launcher["thumb"] = filepath
-                
+
         self.storage_backend._save_launchers(self.launchers)
 
         # returning back to the previous window
@@ -509,7 +508,7 @@ class Main:
          msg1 = __language__( 30033 )  % ( os.path.split( self.url )[ 1 ], )
          pDialog.update( percent, msg1 )
          if ( pDialog.iscanceled() ): raise
-        
+
     def _scan_launcher(self, launchername):
         self._search_thumb(launchername, "")
         self.storage_backend.save_launchers(self.launchers)
@@ -524,13 +523,13 @@ class Main:
         path = selectedLauncher["rompath"]
         exts = selectedLauncher["romext"]
         roms = selectedLauncher["roms"]
-        
+
         #remove dead entries
         if (len(roms) > 0):
             i = 0
             removedRoms = 0
             ret = pDialog.create(__language__( 30000 ), __language__( 30501 ) % (path));
-            
+
             for key in sorted(roms.iterkeys()):
                 pDialog.update(i * 100 / len(roms))
                 i += 1
@@ -540,9 +539,9 @@ class Main:
             pDialog.close()
             if not (removedRoms == 0):
                 xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (__language__( 30000 ), __language__( 30502 ) % (removedRoms)))
-        
+
         ret = pDialog.create(__language__( 30000 ), __language__( 30014 ) % (path));
-        
+
         files = os.listdir(path)
         for f in files:
             pDialog.update(filesCount * 100 / len(files))
@@ -567,14 +566,14 @@ class Main:
                         # add rom to the roms list (using name as index)
                         roms[romname] = romdata
                         romsCount = romsCount + 1
-                        
+
                         if (addRoms):
                             self._add_rom(launcherName, romdata["name"], romdata["filename"], romdata["thumb"], len(files))
                             romadded = True
                 if not romadded:
                     skipCount = skipCount + 1
-                
-            filesCount = filesCount + 1    
+
+            filesCount = filesCount + 1
         #pDialog.close()
         self.storage_backend.save_launchers(self.launchers)
         if (skipCount == 0):
@@ -601,7 +600,7 @@ class Main:
             # return empty string if retrieval failed
             print "ERROR: %s::%s (%d) - %s" % ( self.__class__.__name__, sys.exc_info()[ 2 ].tb_frame.f_code.co_name, sys.exc_info()[ 2 ].tb_lineno, sys.exc_info()[ 1 ], )
             return ""
-        
+
     def _get_thumb(self, displayName, fileName):
         exts = ['png', 'jpg', 'gif', 'bmp']
         for ext in exts:
@@ -611,7 +610,7 @@ class Main:
             thumbfilename = os.path.join(self.settings[ "thumbs_path" ], "%s.%s" % (os.path.basename(fileName).split(".")[0], ext))
             if (os.path.isfile(thumbfilename)):
                 return thumbfilename
-        
+
     def _add_launcher(self, name, cmd, path, ext, thumb, wait, roms, total) :
         commands = []
         commands.append((__language__( 30512 ), "XBMC.RunPlugin(%s?%s)"    % (self._path, SEARCH_ALL_COMMAND) , ))#search all
@@ -638,7 +637,7 @@ class Main:
             thumbnail = thumb
         else:
             thumbnail = self._get_thumb(name, cmd)
-            
+
         if (thumbnail):
             listitem = xbmcgui.ListItem( name, iconImage=icon, thumbnailImage=thumbnail)
         else:
@@ -671,7 +670,7 @@ class Main:
         ext = launcher["romext"]
         roms = launcher["roms"]
         rompath = launcher["rompath"]
-        
+
         romfile = dialog.browse(1, __language__( 30017 ),"files", "."+ext, False, False, rompath)
         if (romfile):
             title=os.path.basename(romfile).split(".")[0].capitalize()
@@ -703,7 +702,7 @@ class Main:
                 filter = ".bat|.exe|.cmd"
             else:
                 filter = ""
-            
+
         if (type == 0):
             app = xbmcgui.Dialog().browse(1,__language__( 30023 ),"files",filter)
             if (app):
@@ -715,12 +714,12 @@ class Main:
                     keyboard = xbmc.Keyboard(title, __language__( 30025 ))
                     keyboard.doModal()
                     if (keyboard.isConfirmed()):
-                        title = keyboard.getText()                    
+                        title = keyboard.getText()
                         # prepare launcher object data
                         launcherdata = {}
                         launcherdata["name"] = title
                         launcherdata["application"] = app
-                        launcherdata["args"] = args 
+                        launcherdata["args"] = args
                         launcherdata["rompath"] = ""
                         launcherdata["romext"] = ""
                         #try the filename with different extension to get a valid thumbnail
@@ -731,7 +730,7 @@ class Main:
                             launcherdata["thumb"] = ""
                         launcherdata["wait"] = "true"
                         launcherdata["roms"] = {}
-                    
+
                         # add launcher to the launchers list (using name as index)
                         self.launchers[title] = launcherdata
                         self.storage_backend.save_launchers(self.launchers)
@@ -760,7 +759,7 @@ class Main:
                                 launcherdata = {}
                                 launcherdata["name"] = title
                                 launcherdata["application"] = app
-                                launcherdata["args"] = args 
+                                launcherdata["args"] = args
                                 launcherdata["rompath"] = path
                                 launcherdata["romext"] = ext
                                 #try the filename and path with different extension to get a valid thumbnail
@@ -777,7 +776,7 @@ class Main:
                                         launcherdata["thumb"] = ""
                                 launcherdata["wait"] = "true"
                                 launcherdata["roms"] = {}
-                        
+
                                 # add launcher to the launchers list (using name as index)
                                 if not self.launchers:
                                     self.launchers = {}
@@ -799,21 +798,21 @@ class Main:
             #xbmcgui.Dialog().ok(__language__( 30000 ), __language__( 30030 ))
         self.storage_backend.save_launchers(self.launchers)
 
-        
+
 
     def _get_search_engine( self ):
         exec "import resources.search_engines.%s.search_engine as search_engine" % ( self.settings[ "search_engine" ], )
         return search_engine.SearchEngine()
-                                
+
     def _get_settings( self ):
         self.settings = {}
         self.settings[ "thumbs_path" ]     =  THUMBS_PATH
-        
-        try: 
+
+        try:
             self.settings[ "search_engine" ]   =  __settings__.getSetting( int(sys.argv[1]),"search_engine" )
-        except: 
+        except:
             self.settings[ "search_engine" ]   =  __settings__.getSetting( "search_engine" )
-        
+
         if (not os.path.isdir(os.path.dirname(self.settings[ "thumbs_path" ]))):
             os.makedirs(os.path.dirname(self.settings[ "thumbs_path" ]));
 
@@ -860,7 +859,7 @@ class Main:
         for key in sorted(rl.iterkeys()):
             self._add_rom(rl[key]["launcherName"], rl[key]["name"], rl[key]["filename"], rl[key]["thumb"], len(rl))
             print "Launcher: %s : add %s" % (rl[key]["launcherName"], rl[key]["name"])
-        
+
         xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
 
 #        #sorted by launcher
