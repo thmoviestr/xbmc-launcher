@@ -1,7 +1,7 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; version 2 of the License.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,8 @@ import xbmcplugin
 import time
 import re
 import urllib
+
+from storagebackend import XMLStorageBackend
 
 BASE_PATH = os.getcwd()
 print BASE_PATH
@@ -89,21 +91,24 @@ class Main:
                 /launcher/%%IMPORT%% - import roms from rom path into launcher
                 /launcher/%%SCAN%% - scan for launcher & roms data from the internet
                 /launcher/rom/%%SCAN%% - scan for rom data from the internet
-                /launcher/%%WAIT_TOGGLE%% - toggle wait state 
+                /launcher/%%WAIT_TOGGLE%% - toggle wait state
                 /%%ADD%% - add a new launcher (open wizard)
-                
-                (blank)     - open a list of the available launchers. if no launcher exists - open the launcher creation wizard.
-    '''                        
+                (blank)     - open a list of the available launchers. if no launcher exists - open the launcher creation wizard. '''
+
     def __init__( self ):
         # store an handle pointer
         self._handle = int(sys.argv[ 1 ])
         print self._handle
-                    
         self._path = sys.argv[ 0 ]
-        
+
         # get users preference
         self._get_settings()
-        self._load_launchers(self.get_xml_source())
+
+        # Set up the backend
+        #self._load_launchers(self.get_xml_source())
+        # TODO: Make this a user setting if we get more backends, sqlite etc?
+        self.storage_backend = XMLStorageBackend(PLUGIN_DATA_PATH)
+        self.launchers = self.storage_backend.get_launchers()
 
         # if a commmand is passed as parameter
         param = sys.argv[ 2 ]
@@ -112,7 +117,7 @@ class Main:
             command = param.split(COMMAND_ARGS_SEPARATOR)
             dirname = os.path.dirname(command[0])
             basename = os.path.basename(command[0])
-            
+
             # check the action needed
             if (dirname):
                 launcher = dirname
@@ -197,7 +202,7 @@ class Main:
         ret = dialog.yesno(__language__( 30000 ), __language__( 30010 ) % rom)
         if (ret):
             self.launchers[launcher]["roms"].pop(rom)
-            self._save_launchers()
+            self.storage_backend.save_launchers(launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
             
     def _remove_launcher(self, launcherName):
@@ -205,7 +210,7 @@ class Main:
         ret = dialog.yesno(__language__( 30000 ), __language__( 30010 ) % launcherName)
         if (ret):
             self.launchers.pop(launcherName)
-            self._save_launchers()
+            self.storage_backend.save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
             
     def _rename_rom(self, launcher, rom):        
@@ -213,7 +218,7 @@ class Main:
         keyboard.doModal()
         if (keyboard.isConfirmed()):
             self.launchers[launcher]["roms"][rom]["name"] = keyboard.getText()
-            self._save_launchers()
+            self.storage_backend.save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s?%s)" % (self._path, launcher))
         
     def _rename_launcher(self, launcherName):
@@ -221,7 +226,7 @@ class Main:
         keyboard.doModal()
         if (keyboard.isConfirmed()):
             self.launchers[launcherName]["name"] = keyboard.getText()
-            self._save_launchers()
+            self.storage_backend._save_launchers(self.launchers)
             xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
             
     def _run_launcher(self, launcherName):
@@ -291,131 +296,131 @@ class Main:
                         pass;
                         # unsupported platform
 
-    ''' get an xml data from an xml file '''
-    def get_xml_source( self ):
-        try:
-            usock = open( BASE_CURRENT_SOURCE_PATH, 'r' )
-            # read source
-            xmlSource = usock.read()
-            # close socket
-            usock.close()
-            ok = True
-        except:
-            # oops print error message
-            print "ERROR: %s::%s (%d) - %s" % ( self.__class__.__name__, sys.exc_info()[ 2 ].tb_frame.f_code.co_name, sys.exc_info()[ 2 ].tb_lineno, sys.exc_info()[ 1 ], )
-            ok = False
-        if ( ok ):
-            # return the xml string without \n\r (newline)
-            return xmlSource.replace("\n","").replace("\r","")
-        else:
-            return ""
-
-    def _save_launchers (self):
-        # make settings directory if doesn't exists
-        if (not os.path.isdir(os.path.dirname(BASE_CURRENT_SOURCE_PATH))):
-            os.makedirs(os.path.dirname(BASE_CURRENT_SOURCE_PATH));
-            
-        usock = open( BASE_CURRENT_SOURCE_PATH, 'w' )
-        usock.write("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n")
-        usock.write("<launchers>\n")
-        for launcherIndex in self.launchers:
-            launcher = self.launchers[launcherIndex]
-            usock.write("\t<launcher>\n")
-            usock.write("\t\t<name>"+launcher["name"]+"</name>\n")
-            usock.write("\t\t<application>"+launcher["application"]+"</application>\n")
-            usock.write("\t\t<args>"+launcher["args"]+"</args>\n")
-            usock.write("\t\t<rompath>"+launcher["rompath"]+"</rompath>\n")
-            usock.write("\t\t<romext>"+launcher["romext"]+"</romext>\n")
-            usock.write("\t\t<thumb>"+launcher["thumb"]+"</thumb>\n")
-            usock.write("\t\t<wait>"+launcher["wait"]+"</wait>\n")
-            usock.write("\t\t<roms>\n")
-            for romIndex in launcher["roms"]:
-                romdata = launcher["roms"][romIndex]
-                usock.write("\t\t\t<rom>\n")
-                usock.write("\t\t\t\t<name>"+romdata["name"]+"</name>\n")
-                usock.write("\t\t\t\t<filename>"+romdata["filename"]+"</filename>\n")
-                usock.write("\t\t\t\t<thumb>"+romdata["thumb"]+"</thumb>\n")
-                usock.write("\t\t\t</rom>\n")
-            usock.write("\t\t</roms>\n")
-            usock.write("\t</launcher>\n")            
-        usock.write("</launchers>")
-        usock.close()
-        
-    ''' read the list of launchers and roms from launchers.xml file '''
-    def _load_launchers( self , xmlSource):
-        launchers = re.findall( "<launcher>(.*?)</launcher>", xmlSource )
-        print "Launcher: found %d launchers" % ( len(launchers) )
-        for launcher in launchers:
-            name = re.findall( "<name>(.*?)</name>", launcher )
-            application = re.findall( "<application>(.*?)</application>", launcher )
-            args = re.findall( "<args>(.*?)</args>", launcher )
-            rompath = re.findall( "<rompath>(.*?)</rompath>", launcher )
-            romext = re.findall( "<romext>(.*?)</romext>", launcher )
-            thumb = re.findall( "<thumb>(.*?)</thumb>", launcher )
-            wait = re.findall( "<wait>(.*?)</wait>", launcher )
-            romsxml = re.findall( "<rom>(.*?)</rom>", launcher )
-
-            if len(name) > 0 : name = name[0]
-            else: name = "unknown"
-
-            if len(application) > 0 : application = application[0]
-            else: application = ""
-
-            if len(args) > 0 : args = args[0]
-            else: args = ""
-
-            if len(rompath) > 0 : rompath = rompath[0]
-            else: rompath = ""
-
-            if len(romext) > 0: romext = romext[0]
-            else: romext = ""
-
-            if len(thumb) > 0: thumb = thumb[0]
-            else: thumb = ""
-
-            if len(wait) > 0: wait = wait[0]
-            else: wait = ""
-            
-            roms = {}
-            for rom in romsxml:
-                romname = re.findall( "<name>(.*?)</name>", rom )
-                romfilename = re.findall( "<filename>(.*?)</filename>", rom )
-                romthumb = re.findall( "<thumb>(.*?)</thumb>", rom )
-
-                if len(romname) > 0 : romname = romname[0]
-                else: romname = "unknown"
-
-                if len(romfilename) > 0 : romfilename = romfilename[0]
-                else: romfilename = ""
-
-                if len(romthumb) > 0 : romthumb = romthumb[0]
-                else: romthumb = ""
-
-                # prepare rom object data
-                romdata = {}
-                romdata["name"] = romname
-                romdata["filename"] = romfilename
-                romdata["thumb"] = romthumb
-
-                # add rom to the roms list (using name as index)
-                roms[romname] = romdata
-
-            # prepare launcher object data
-            launcherdata = {}
-            launcherdata["name"] = name
-            launcherdata["application"] = application
-            launcherdata["args"] = args
-            launcherdata["rompath"] = rompath
-            launcherdata["romext"] = romext
-            launcherdata["thumb"] = thumb
-            launcherdata["wait"] = wait
-            launcherdata["roms"] = roms
-
-            # add launcher to the launchers list (using name as index)
-            self.launchers[name] = launcherdata
+#    ''' get an xml data from an xml file '''
+#    def get_xml_source( self ):
+#        try:
+#            usock = open( BASE_CURRENT_SOURCE_PATH, 'r' )
+#            # read source
+#            xmlSource = usock.read()
+#            # close socket
+#            usock.close()
+#            ok = True
+#        except:
+#            # oops print error message
+#            print "ERROR: %s::%s (%d) - %s" % ( self.__class__.__name__, sys.exc_info()[ 2 ].tb_frame.f_code.co_name, sys.exc_info()[ 2 ].tb_lineno, sys.exc_info()[ 1 ], )
+#            ok = False
+#        if ( ok ):
+#            # return the xml string without \n\r (newline)
+#            return xmlSource.replace("\n","").replace("\r","")
+#        else:
+#            return ""
+#
+#    def _save_launchers (self):
+#        # make settings directory if doesn't exists
+#        if (not os.path.isdir(os.path.dirname(BASE_CURRENT_SOURCE_PATH))):
+#            os.makedirs(os.path.dirname(BASE_CURRENT_SOURCE_PATH));
+#            
+#        usock = open( BASE_CURRENT_SOURCE_PATH, 'w' )
+#        usock.write("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n")
+#        usock.write("<launchers>\n")
+#        for launcherIndex in self.launchers:
+#            launcher = self.launchers[launcherIndex]
+#            usock.write("\t<launcher>\n")
+#            usock.write("\t\t<name>"+launcher["name"]+"</name>\n")
+#            usock.write("\t\t<application>"+launcher["application"]+"</application>\n")
+#            usock.write("\t\t<args>"+launcher["args"]+"</args>\n")
+#            usock.write("\t\t<rompath>"+launcher["rompath"]+"</rompath>\n")
+#            usock.write("\t\t<romext>"+launcher["romext"]+"</romext>\n")
+#            usock.write("\t\t<thumb>"+launcher["thumb"]+"</thumb>\n")
+#            usock.write("\t\t<wait>"+launcher["wait"]+"</wait>\n")
+#            usock.write("\t\t<roms>\n")
+#            for romIndex in launcher["roms"]:
+#                romdata = launcher["roms"][romIndex]
+#                usock.write("\t\t\t<rom>\n")
+#                usock.write("\t\t\t\t<name>"+romdata["name"]+"</name>\n")
+#                usock.write("\t\t\t\t<filename>"+romdata["filename"]+"</filename>\n")
+#                usock.write("\t\t\t\t<thumb>"+romdata["thumb"]+"</thumb>\n")
+#                usock.write("\t\t\t</rom>\n")
+#            usock.write("\t\t</roms>\n")
+#            usock.write("\t</launcher>\n")            
+#        usock.write("</launchers>")
+#        usock.close()
+#        
+#    ''' read the list of launchers and roms from launchers.xml file '''
+#    def _load_launchers( self , xmlSource):
+#        launchers = re.findall( "<launcher>(.*?)</launcher>", xmlSource )
+#        print "Launcher: found %d launchers" % ( len(launchers) )
+#        for launcher in launchers:
+#            name = re.findall( "<name>(.*?)</name>", launcher )
+#            application = re.findall( "<application>(.*?)</application>", launcher )
+#            args = re.findall( "<args>(.*?)</args>", launcher )
+#            rompath = re.findall( "<rompath>(.*?)</rompath>", launcher )
+#            romext = re.findall( "<romext>(.*?)</romext>", launcher )
+#            thumb = re.findall( "<thumb>(.*?)</thumb>", launcher )
+#            wait = re.findall( "<wait>(.*?)</wait>", launcher )
+#            romsxml = re.findall( "<rom>(.*?)</rom>", launcher )
+#
+#            if len(name) > 0 : name = name[0]
+#            else: name = "unknown"
+#
+#            if len(application) > 0 : application = application[0]
+#            else: application = ""
+#
+#            if len(args) > 0 : args = args[0]
+#            else: args = ""
+#
+#            if len(rompath) > 0 : rompath = rompath[0]
+#            else: rompath = ""
+#
+#            if len(romext) > 0: romext = romext[0]
+#            else: romext = ""
+#
+#            if len(thumb) > 0: thumb = thumb[0]
+#            else: thumb = ""
+#
+#            if len(wait) > 0: wait = wait[0]
+#            else: wait = ""
+#            
+#            roms = {}
+#            for rom in romsxml:
+#                romname = re.findall( "<name>(.*?)</name>", rom )
+#                romfilename = re.findall( "<filename>(.*?)</filename>", rom )
+#                romthumb = re.findall( "<thumb>(.*?)</thumb>", rom )
+#
+#                if len(romname) > 0 : romname = romname[0]
+#                else: romname = "unknown"
+#
+#                if len(romfilename) > 0 : romfilename = romfilename[0]
+#                else: romfilename = ""
+#
+#                if len(romthumb) > 0 : romthumb = romthumb[0]
+#                else: romthumb = ""
+#
+#                # prepare rom object data
+#                romdata = {}
+#                romdata["name"] = romname
+#                romdata["filename"] = romfilename
+#                romdata["thumb"] = romthumb
+#
+#                # add rom to the roms list (using name as index)
+#                roms[romname] = romdata
+#
+#            # prepare launcher object data
+#            launcherdata = {}
+#            launcherdata["name"] = name
+#            launcherdata["application"] = application
+#            launcherdata["args"] = args
+#            launcherdata["rompath"] = rompath
+#            launcherdata["romext"] = romext
+#            launcherdata["thumb"] = thumb
+#            launcherdata["wait"] = wait
+#            launcherdata["roms"] = roms
+#
+#            # add launcher to the launchers list (using name as index)
+#            self.launchers[name] = launcherdata
     
     def _get_launchers( self ):
-        if (len(self.launchers) > 0):
+        if self.launchers:
             for key in sorted(self.launchers.iterkeys()):
                 self._add_launcher(self.launchers[key]["name"], self.launchers[key]["application"], self.launchers[key]["rompath"], self.launchers[key]["romext"], self.launchers[key]["thumb"], self.launchers[key]["wait"], self.launchers[key]["roms"], len(self.launchers))
             xbmcplugin.endOfDirectory( handle=int( self._handle ), succeeded=True, cacheToDisc=False )
@@ -491,7 +496,7 @@ class Main:
         else:
             launcher["thumb"] = filepath
                 
-        self._save_launchers()
+        self.storage_backend._save_launchers(self.launchers)
 
         # returning back to the previous window
         if (romname):
@@ -507,7 +512,7 @@ class Main:
         
     def _scan_launcher(self, launchername):
         self._search_thumb(launchername, "")
-        self._save_launchers()
+        self.storage_backend.save_launchers(self.launchers)
 
     def _import_roms(self, launcherName, addRoms = False):
         dialog = xbmcgui.Dialog()
@@ -571,7 +576,7 @@ class Main:
                 
             filesCount = filesCount + 1    
         #pDialog.close()
-        self._save_launchers()
+        self.storage_backend.save_launchers(self.launchers)
         if (skipCount == 0):
             xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (__language__( 30000 ), __language__( 30015 ) % (romsCount) + " " + __language__( 30050 )))
             #dialog.ok(__language__( 30000 ), (__language__( 30015 )+ "\n" + __language__( 30050 )) % (romsCount))
@@ -686,7 +691,7 @@ class Main:
 
                 xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (__language__( 30000 ), __language__( 30019 ) + " " + __language__( 30050 )))
                 #xbmcgui.Dialog().ok(__language__( 30000 ), __language__( 30019 )+ "\n" + __language__( 30050 ))
-        self._save_launchers()
+        self.storage_backend.save_launchers(self.launchers)
 
     def _add_new_launcher ( self ) :
         dialog = xbmcgui.Dialog()
@@ -729,7 +734,7 @@ class Main:
                     
                         # add launcher to the launchers list (using name as index)
                         self.launchers[title] = launcherdata
-                        self._save_launchers()
+                        self.storage_backend.save_launchers(self.launchers)
 
                         xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
                         return True
@@ -774,8 +779,10 @@ class Main:
                                 launcherdata["roms"] = {}
                         
                                 # add launcher to the launchers list (using name as index)
+                                if not self.launchers:
+                                    self.launchers = {}
                                 self.launchers[title] = launcherdata
-                                self._save_launchers()
+                                self.storage_backend.save_launchers(self.launchers)
                                 xbmc.executebuiltin("ReplaceWindow(Programs,%s)" % (self._path))
                                 return True
         return False
@@ -790,7 +797,7 @@ class Main:
             self.launchers[launcher]["wait"] = "true"
             xbmc.executebuiltin("XBMC.Notification(%s,%s, 6000)" % (__language__( 30000 ), __language__( 30030 )  ))
             #xbmcgui.Dialog().ok(__language__( 30000 ), __language__( 30030 ))
-        self._save_launchers()
+        self.storage_backend.save_launchers(self.launchers)
 
         
 
